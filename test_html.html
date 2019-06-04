@@ -1,0 +1,24 @@
+<body>
+<div class="container">
+    <div class="clustersContainer">
+        <div class="clusterContainer">
+            <p><b>Welcome to the DevOps Challenge</b></p>
+            <p><center>You will need keys that are provided below <i>(Think outside the box)</i><br>Do not by any means commit them, keep them local and safe.<br><br>You have 72 hours to complete the task</center></p>
+
+            <p><a href="https://github.com/prodopsio/devops-challenge" id="instructions_link" target="_blank">Instructions</a></p>
+            <button id="keys" class="run" onclick="getKeys()">Get keys</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    host = window.location.origin;
+    clusters = [];
+    function getKeys() {
+      console.log("UGFyYW1ldGVyczoKY29kZV9uYW1lOiB0aGVkb2N0b3IKYXdzIGtleTogdGVzdCBrZXkKYXdzIHNlY3JldDogc2VjcmV0CmF3cyByZWdpb246IHVzLWVhc3QtMQ==")
+      document.getElementById("keys").innerHTML = "Here they are"
+    }
+
+</script>
+</body>

@@ -4,8 +4,10 @@ import re
 
 import boto3
 import requests
+import sys
 import urllib3
 from boto3.dynamodb.conditions import Key
+from retry import retry
 
 from exception_decor import exception
 from exception_logger import logger
@@ -18,21 +20,24 @@ print(FOLDERNAME)
 class GetKeysFromSite():
 
     @exception(logger)
-    def get_html_page(self):
+    @retry(TimeoutError, tries=3, delay=2)
+    def get_html_page(self, url):
         logger.info("Getting HTML source page")
-        url = 'https://challenge.prodops.io/'
+        logger.debug(url)
         http_pool = urllib3.connection_from_url(url)
         request_data = http_pool.urlopen('GET', url)
 
-        html_page = request_data.data.decode("utf-8")
-        logger.info("HTML Page collected")
-        assert isinstance(html_page, str)
-        return html_page
+        if request_data.status == 200:
+            logger.info("HTML Page collected")
+            html_page = request_data.data.decode("utf-8")
+            assert isinstance(html_page, str)
+            return html_page
+        return None
 
     @exception(logger)
     def extract_credentials(self, html_page):
         logger.info("Extratctin credentials")
-        groups = re.search('''(log\(")(.*)("\))''', html_page, re.IGNORECASE)
+        groups = re.search('(log\(")(.*)("\))', html_page, re.IGNORECASE)
         encoded = groups.group(2)
         credentials = {}
         credentials_from_html = base64.b64decode(encoded).decode('utf-8')
@@ -62,7 +67,7 @@ class GetKeysFromSite():
 
     @exception(logger)
     def main(self):
-        html_page = self.get_html_page()
+        html_page = self.get_html_page('https://challenge.prodops.io/')
         credentials = self.extract_credentials(html_page)
         self.store_to_file(credentials)
 
@@ -94,6 +99,7 @@ class GetCredentialsFromDynamoDB(object):
         return keys
 
     @exception(logger)
+    @retry(TimeoutError, tries=3, delay=2)
     def put_secret_to_container(self, keys):
         logger.info("Posting secret to container")
         url = "http://127.0.0.1:5000/secret"
@@ -113,10 +119,14 @@ class GetCredentialsFromDynamoDB(object):
             'cache-control': "no-cache",
         }
         response = requests.request("PUT", url, data=payload, headers=headers)
-        logger.info("Posting to container finished")
-        return response
+        if response.status_code == 200:
+            logger.info("Posting to container finished")
+            return response
+        return None
 
-    def put_bucket_and_git_info_to_healt(self):
+    @exception
+    @retry(TimeoutError, tries=3, delay=2)
+    def put_bucket_and_git_info_to_health(self):
         logger.info("Posting secret to container")
         url = "http://127.0.0.1:5000/health"
         payload_json = {
@@ -130,14 +140,19 @@ class GetCredentialsFromDynamoDB(object):
             'cache-control': "no-cache",
         }
         response = requests.request("PUT", url, data=payload, headers=headers)
-        logger.info("Posting to container finished")
-        return response
+        if response.status_code == 200:
+            logger.info("Posting to container finished")
+            return response
+        return None
 
     def main(self, ):
         db_connection = self.connect_to_dynamodb()
         keys = self.read_from_dynamodb(db_connection)
-        response = self.put_secret_to_container(keys)
-        print(response)
+        response_secret = self.put_secret_to_container(keys)
+        logger.info(response_secret)
+
+        response_health = self.put_bucket_and_git_info_to_health()
+        logger.info(response_health)
 
 
 if __name__ == '__main__':
@@ -145,3 +160,4 @@ if __name__ == '__main__':
     gkfs.main()
     gcfd = GetCredentialsFromDynamoDB()
     gcfd.main()
+    sys.exit(0)
