@@ -1,3 +1,5 @@
+"""Get aws keys from hiden repository and store them for accessing DynamoDB. The pushing the results to a web server"""
+
 import base64
 import os
 import re
@@ -23,6 +25,13 @@ class GetKeysFromSite():
     @exception(logger)
     @retry(Timeout, tries=3, delay=2)
     def get_html_page(self, url):
+        """Getting HTML page body with hidden credentials.
+
+        :param url: html page endpoint
+        :return: HTML page text.
+            or
+            None if error
+        """
         logger.info("Getting HTML source page")
         logger.debug(url)
         http_pool = urllib3.connection_from_url(url)
@@ -37,6 +46,12 @@ class GetKeysFromSite():
 
     @exception(logger)
     def extract_credentials(self, html_page):
+        """Extracting credentials from HTML page.
+
+        :param html_page:
+        :return:
+            credentials: dict
+        """
         logger.info("Extratctin credentials")
         groups = re.search('(log\(")(.*)("\))', html_page, re.IGNORECASE)
         encoded = groups.group(2)
@@ -51,6 +66,11 @@ class GetKeysFromSite():
 
     @exception(logger)
     def store_to_file(self, credentials):
+        """Storing recovered credentials to file for future use.
+
+        :param credentials:
+        :return: None
+        """
         logger.info("Storring credentials to file")
         aws_credentials_text = "[default]\n" \
                                "aws_access_key_id = {key}\n" \
@@ -80,19 +100,31 @@ class GetCredentialsFromDynamoDB(object):
 
     @staticmethod
     def get_code_name():
+        """Getting project code_name from stored file.
+
+        :return: project_name
+        """
         logger.info("Reading config file")
         with open(FOLDERNAME + "config", "r") as f:
             return f.readlines()[0].strip()
 
     @exception(logger)
-
     def connect_to_dynamodb(self, ):
+        """Connector module tp DynampDB
+
+        :return: DynamoDB connection client
+        """
         logger.info("Conneting to DynamoDB")
         client = boto3.resource("dynamodb")
         return client
 
     @exception(logger)
     def read_from_dynamodb(self, db_connection):
+        """Read response from Dynamo DB
+
+        :param db_connection: connector object from previous function
+        :return: keys: retrieved credentials from DynamoDB
+        """
         logger.info("Reading from DynamoDB")
         table = db_connection.Table("devops-challenge")
         results = table.query(KeyConditionExpression=Key("code_name").eq(self.code_name))
@@ -103,6 +135,11 @@ class GetCredentialsFromDynamoDB(object):
     @exception(logger)
     @retry(Timeout, tries=3, delay=2)
     def put_secret_to_container(self, keys):
+        """Pushing secret restored from DynamoDB to predefined endpoint.
+
+        :param keys:
+        :return: response or None
+        """
         logger.info("Posting secret to container")
         url = "http://127.0.0.1:5000/secret"
         payload_json = {
@@ -122,6 +159,10 @@ class GetCredentialsFromDynamoDB(object):
     @exception
     @retry(Timeout, tries=3, delay=2)
     def put_bucket_and_git_info_to_health(self):
+        """Pushing projects info (image and git) to predefined endpoint
+
+        :return: response or None
+        """
         logger.info("Posting secret to container")
         url = "http://127.0.0.1:5000/health"
         payload_json = {
@@ -151,6 +192,7 @@ class GetCredentialsFromDynamoDB(object):
 
 
 if __name__ == '__main__':
+    """Main module"""
     gkfs = GetKeysFromSite()
     gkfs.main()
     gcfd = GetCredentialsFromDynamoDB()
