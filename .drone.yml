@@ -3,7 +3,7 @@ name: get_credentials_from_dynamo_db
 
 steps:
   - name: build
-    image: python3
+    image: python
     pull: always
     commands:
       - go build
