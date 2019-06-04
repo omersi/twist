@@ -2,12 +2,13 @@ kind: pipeline
 name: get_credentials_from_dynamo_db
 
 steps:
-  - name: build
-  - image: python:3.6.7
-  commands:
-    - pip install -r requirements.txt
-    - flake8 setup.py drone tests
-    - nosetests --with-coverage --cover-package drone -v
+  - name: docker
+    image: plugins/docker
+    settings:
+      username: omerlstwist
+      password: OK1wRi4Z15*2h*FXtak!ZAOc
+      repo: get_code_from_dynamodb
+      tags: latest
 
 matrix:
   PYTHON_VERSION:
