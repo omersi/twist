@@ -4,7 +4,11 @@ name: get_credentials_from_dynamo_db
 steps:
   - name: build
     image: python:3.6.7
-    pull: always
-    commands:
-#      - pip3 install --no-index -r requirements.txt
-      - python3 get_credentials_from_dynamo_db.py
+  commands:
+    - pip install -r requirements.txt
+    - flake8 setup.py drone tests
+    - nosetests --with-coverage --cover-package drone -v
+
+matrix:
+  PYTHON_VERSION:
+    - 3.6.7
