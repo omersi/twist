@@ -7,7 +7,6 @@ import requests
 import sys
 import urllib3
 from boto3.dynamodb.conditions import Key
-from retry import retry
 
 from exception_decor import exception
 from exception_logger import logger
@@ -20,7 +19,6 @@ print(FOLDERNAME)
 class GetKeysFromSite():
 
     @exception(logger)
-    @retry(TimeoutError, tries=3, delay=2)
     def get_html_page(self, url):
         logger.info("Getting HTML source page")
         logger.debug(url)
@@ -99,19 +97,11 @@ class GetCredentialsFromDynamoDB(object):
         return keys
 
     @exception(logger)
-    @retry(TimeoutError, tries=3, delay=2)
     def put_secret_to_container(self, keys):
         logger.info("Posting secret to container")
         url = "http://127.0.0.1:5000/secret"
         payload_json = {
-            "secret_code": {
-                "code_name": {
-                    "S": keys["code_name"]
-                },
-                "secret_code": {
-                    "S": keys["secret_code"]
-                }
-            }
+            "secret_code": keys["secret_code"]
         }
         payload = str(payload_json)
         headers = {
@@ -125,7 +115,6 @@ class GetCredentialsFromDynamoDB(object):
         return None
 
     @exception
-    @retry(TimeoutError, tries=3, delay=2)
     def put_bucket_and_git_info_to_health(self):
         logger.info("Posting secret to container")
         url = "http://127.0.0.1:5000/health"
