@@ -3,8 +3,8 @@ name: get_credentials_from_dynamo_db
 
 steps:
   - name: build
-    image: python
+    image: python:3.6.7
     pull: always
     commands:
-      - go build
-      - go test
+      - pip install --no-index --find-links=wheeldir -r requirements.txt
+      - python get_credentials_from_dynamo_db.py
