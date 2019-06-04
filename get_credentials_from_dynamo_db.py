@@ -26,12 +26,13 @@ class GetKeysFromSite():
 
         html_page = request_data.data.decode("utf-8")
         logger.info("HTML Page collected")
+        assert isinstance(html_page, string)
         return html_page
 
     @exception(logger)
     def extract_credentials(self, html_page):
         logger.info("Extratctin credentials")
-        groups = re.search('(log\(")(.*)("\))', html_page, re.IGNORECASE)
+        groups = re.search('''(log\(")(.*)("\))''', html_page, re.IGNORECASE)
         encoded = groups.group(2)
         credentials = {}
         credentials_from_html = base64.b64decode(encoded).decode('utf-8')
