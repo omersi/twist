@@ -1,0 +1,10 @@
+kind: pipeline
+name: get_credentials_from_dynamo_db
+
+steps:
+  - name: build
+    image: python3
+    pull: always
+    commands:
+      - go build
+      - go test
