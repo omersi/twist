@@ -26,7 +26,7 @@ class GetKeysFromSite():
 
         html_page = request_data.data.decode("utf-8")
         logger.info("HTML Page collected")
-        assert isinstance(html_page, string)
+        assert isinstance(html_page, str)
         return html_page
 
     @exception(logger)
