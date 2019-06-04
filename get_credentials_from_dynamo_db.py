@@ -1,10 +1,12 @@
-import boto3
-import urllib3
-from boto3.dynamodb.conditions import Key, Attr
-import requests
+import base64
 import os
 import re
-import base64
+
+import boto3
+import requests
+import urllib3
+from boto3.dynamodb.conditions import Key
+
 from exception_decor import exception
 from exception_logger import logger
 
@@ -13,16 +15,16 @@ FOLDERNAME = os.path.dirname(os.path.realpath(__file__)) + "/"
 print(FOLDERNAME)
 
 
-class GetKeysFromSite(object):
+class GetKeysFromSite():
 
     @exception(logger)
     def get_html_page(self):
         logger.info("Getting HTML source page")
         url = 'https://challenge.prodops.io/'
         http_pool = urllib3.connection_from_url(url)
-        r = http_pool.urlopen('GET', url)
+        request_data = http_pool.urlopen('GET', url)
 
-        html_page = r.data.decode("utf-8")
+        html_page = request_data.data.decode("utf-8")
         logger.info("HTML Page collected")
         return html_page
 
