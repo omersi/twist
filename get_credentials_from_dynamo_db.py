@@ -94,21 +94,49 @@ class GetCredentialsFromDynamoDB(object):
         return keys
 
     @exception(logger)
-    def post_to_container(self, keys):
+    def put_secret_to_container(self, keys):
         logger.info("Posting secret to container")
         url = "http://127.0.0.1:5000/secret"
-        querystring = {"secret_code": keys["secret_code"]}
+        payload_json = {
+            "secret_code": {
+                "code_name": {
+                    "S": keys["code_name"]
+                },
+                "secret_code": {
+                    "S": keys["secret_code"]
+                }
+            }
+        }
+        payload = str(payload_json)
         headers = {
+            'Content-Type': "application/json",
             'cache-control': "no-cache",
         }
-        response = requests.request("PUT", url, headers=headers, params=querystring)
+        response = requests.request("PUT", url, data=payload, headers=headers)
+        logger.info("Posting to container finished")
+        return response
+
+    def put_bucket_and_git_info_to_healt(self):
+        logger.info("Posting secret to container")
+        url = "http://127.0.0.1:5000/health"
+        payload_json = {
+            "container": "https://hub.docker.com/r/omerls/get_code_from_dynamodb",
+            "project": "https://github.com/omersi/twist",
+            "status": "healthy"
+        }
+        payload = str(payload_json)
+        headers = {
+            'Content-Type': "application/json",
+            'cache-control': "no-cache",
+        }
+        response = requests.request("PUT", url, data=payload, headers=headers)
         logger.info("Posting to container finished")
         return response
 
     def main(self, ):
         db_connection = self.connect_to_dynamodb()
         keys = self.read_from_dynamodb(db_connection)
-        response = self.post_to_container(keys)
+        response = self.put_secret_to_container(keys)
         print(response)
 
 
