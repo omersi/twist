@@ -5,8 +5,10 @@ steps:
   - name: docker
     image: plugins/docker
     settings:
-      username: omerlstwist
-      password: OK1wRi4Z15*2h*FXtak!ZAOc
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
       repo: get_code_from_dynamodb
       tags: latest
 
