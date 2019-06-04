@@ -9,7 +9,7 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      repo: get_code_from_dynamodb
+      repo: omerlstwist/get_code_from_dynamodb
       tags: latest
 
 matrix:
