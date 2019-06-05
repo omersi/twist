@@ -1,8 +1,10 @@
 kind: pipeline
 name: get_credentials_from_dynamo_db
-pipeline:
-  build: python:3.6.7
 steps:
+  - name: build
+    image: python:3.6.7
+    pull: always
+
   - name: docker
     image: plugins/docker
     settings:
