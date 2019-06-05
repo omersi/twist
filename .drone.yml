@@ -3,8 +3,6 @@ name: get_credentials_from_dynamo_db
 
 pipeline:
   build: python:3.6.7
-  commands:
-    - python -m unittest test_get_credntials_from_dynamo_db.py
 
 steps:
   - name: docker
