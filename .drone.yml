@@ -1,7 +1,6 @@
 kind: pipeline
 name: get_credentials_from_dynamo_db
 
-
 pipeline:
   build: python:3.6.7
   commands:
