@@ -9,6 +9,7 @@ RUN pip3 install retry
 COPY . ./
 
 RUN mkdir ~/.aws
+RUN python3 -m unittest test_get_credntials_from_dynamo_db.py
 
 RUN apt-get update
 RUN apt-get install less

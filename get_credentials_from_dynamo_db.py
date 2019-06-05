@@ -56,7 +56,7 @@ class GetKeysFromSite():
         groups = re.search('(log\(")(.*)("\))', html_page, re.IGNORECASE)
         encoded = groups.group(2)
         credentials = {}
-        credentials_from_html = base64.b64decode(encoded).decode('utf-8')
+        credentials_from_html = base64.b64decode(encoded).decode("utf-8")
         for creds in credentials_from_html.split("\n"):
             if len(creds.split(":")) == 2:
                 _creds = creds.split(":")
@@ -88,7 +88,7 @@ class GetKeysFromSite():
 
     @exception(logger)
     def main(self):
-        html_page = self.get_html_page('https://challenge.prodops.io/')
+        html_page = self.get_html_page("https://challenge.prodops.io/")
         credentials = self.extract_credentials(html_page)
         self.store_to_file(credentials)
 
@@ -98,8 +98,7 @@ class GetCredentialsFromDynamoDB(object):
     def __init__(self):
         self.code_name = self.get_code_name()
 
-    @staticmethod
-    def get_code_name():
+    def get_code_name(self,):
         """Getting project code_name from stored file.
 
         :return: project_name
@@ -134,14 +133,14 @@ class GetCredentialsFromDynamoDB(object):
 
     @exception(logger)
     @retry(Timeout, tries=3, delay=2)
-    def put_secret_to_container(self, keys):
+    def put_secret_to_secret(self, keys, endpoint):
         """Pushing secret restored from DynamoDB to predefined endpoint.
 
         :param keys:
         :return: response or None
         """
         logger.info("Posting secret to container")
-        url = "http://127.0.0.1:5000/secret"
+        url = endpoint + "/secret"
         payload_json = {
             "secret_code": keys["secret_code"]
         }
@@ -156,15 +155,15 @@ class GetCredentialsFromDynamoDB(object):
             return response
         return None
 
-    @exception
+    @exception(logger)
     @retry(Timeout, tries=3, delay=2)
-    def put_bucket_and_git_info_to_health(self):
+    def put_bucket_and_git_info_to_health(self, endpoint):
         """Pushing projects info (image and git) to predefined endpoint
 
         :return: response or None
         """
         logger.info("Posting secret to container")
-        url = "http://127.0.0.1:5000/health"
+        url = endpoint + "/health"
         payload_json = {
             "container": "https://hub.docker.com/r/omerls/get_code_from_dynamodb",
             "project": "https://github.com/omersi/twist",
@@ -182,12 +181,13 @@ class GetCredentialsFromDynamoDB(object):
         return None
 
     def main(self, ):
+        endpoint = "http://127.0.0.1:5000"
         db_connection = self.connect_to_dynamodb()
         keys = self.read_from_dynamodb(db_connection)
-        response_secret = self.put_secret_to_container(keys)
+        response_secret = self.put_secret_to_secret(keys, endpoint)
         logger.info(response_secret)
 
-        response_health = self.put_bucket_and_git_info_to_health()
+        response_health = self.put_bucket_and_git_info_to_health(endpoint)
         logger.info(response_health)
 
 
